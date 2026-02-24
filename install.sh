@@ -1,53 +1,55 @@
 #!/bin/bash
 #
-# bashrc-config Installation Script
+# bashrc-config 安装脚本
 #
 
 set -e
 
+# 获取脚本所在目录
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKUP_DIR="$HOME/.config_backup_$(date +%Y%m%d_%H%M%S)"
 
-# Colors
+# 颜色定义
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
+# 打印函数
 print_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
+    echo -e "${BLUE}[信息]${NC} $1"
 }
 
 print_success() {
-    echo -e "${GREEN}[OK]${NC} $1"
+    echo -e "${GREEN}[成功]${NC} $1"
 }
 
 print_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
+    echo -e "${RED}[错误]${NC} $1"
 }
 
-# Backup existing .bashrc if exists
+# 备份现有的 .bashrc（如果存在）
 if [ -f "$HOME/.bashrc" ]; then
-    print_info "Backing up existing .bashrc to $BACKUP_DIR"
+    print_info "备份现有的 .bashrc 到 $BACKUP_DIR"
     mkdir -p "$BACKUP_DIR"
     cp "$HOME/.bashrc" "$BACKUP_DIR/"
-    print_success "Backup created"
+    print_success "备份已创建"
 fi
 
-# Create symlink
-print_info "Creating symlink for .bashrc"
+# 创建软链接
+print_info "创建 .bashrc 软链接"
 ln -sf "$REPO_DIR/.bashrc" "$HOME/.bashrc"
-print_success ".bashrc linked"
+print_success ".bashrc 链接已创建"
 
-# Create components directory
+# 创建组件目录
 mkdir -p "$HOME/.config/my_linux_config/components"
 
 echo ""
 echo "=================================================="
-echo -e "${GREEN}✅ bashrc-config installed successfully${NC}"
+echo -e "${GREEN}✅ bashrc-config 安装成功${NC}"
 echo "=================================================="
 echo ""
-echo "Next steps:"
+echo "后续步骤："
 echo "  source ~/.bashrc"
 echo ""
-echo "Backup saved to: $BACKUP_DIR"
+echo "备份保存在：$BACKUP_DIR"
