@@ -158,6 +158,14 @@ if [[ -f "${SCRIPT_DIR}/envs/${env_type}/config.sh" ]]; then
     source "${SCRIPT_DIR}/envs/${env_type}/config.sh"
 fi
 
+# 加载组件配置扩展
+COMPONENTS_DIR="\${HOME}/.config/my_linux_config/components"
+if [ -d "\${COMPONENTS_DIR}" ]; then
+    for script in "\${COMPONENTS_DIR}"/*.sh; do
+        [ -f "\$script" ] && source "\$script"
+    done
+fi
+
 # 加载用户自定义配置（如果不存在则创建）
 USER_CONFIG="\${HOME}/.bashrc.local"
 if [[ -f "\$USER_CONFIG" ]]; then
@@ -199,6 +207,27 @@ EOF
     log_info "已创建用户配置模板: $user_config"
 }
 
+# 配置 TE_PATH 自动检测组件
+setup_te_path_component() {
+    local components_dir="$HOME/.config/my_linux_config/components"
+    local te_env_script="${components_dir}/te_env.sh"
+
+    if [[ "$DRY_RUN" == true ]]; then
+        log_dry "将创建 TE_PATH 组件: $te_env_script"
+        return 0
+    fi
+
+    mkdir -p "$components_dir"
+    cat > "$te_env_script" << 'EOF'
+# 自动检测并导出 Transformer Engine 路径
+if [ -d "/workspace/TransformerEngine" ]; then
+    export TE_PATH="/workspace/TransformerEngine"
+fi
+EOF
+    chmod +x "$te_env_script"
+    log_info "已配置 TE_PATH 自动检测组件: $te_env_script"
+}
+
 # 主函数
 main() {
     parse_args "$@"
@@ -226,6 +255,9 @@ main() {
     
     # 创建用户模板
     create_user_template
+    
+    # 配置可插拔组件如 TE_PATH
+    setup_te_path_component
     
     if [[ "$DRY_RUN" == false ]]; then
         log_info "安装完成！"
