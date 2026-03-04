@@ -8,6 +8,14 @@
 # 测试临时文件
 test/tmp/
 *.log
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.hypothesis/
+
+# 运行时生成
+.bashrc
 
 # 系统文件
 .DS_Store

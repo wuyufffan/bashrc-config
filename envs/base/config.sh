@@ -79,11 +79,3 @@ bind '"\e[B": history-search-forward'
 # 基础提示符定义
 #==========================================
 export PS1='\[\033[1;36m\][base]\[\033[0m\] \[\033[1;33m\]\u@\h\[\033[0m\]:\[\033[1;34m\]\w\[\033[0m\] \$ '
-
-#==========================================
-# 加载网络测试模块（如果存在）
-#==========================================
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-if [[ -f "${SCRIPT_DIR}/lib/network_test.sh" ]]; then
-    source "${SCRIPT_DIR}/lib/network_test.sh"
-fi
