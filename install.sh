@@ -122,18 +122,24 @@ backup_existing() {
 generate_bashrc() {
     local env_type=$1
     local output_file=$2
+    local explicit_env=$3  # 传入是否显式指定了环境
     
     if [[ "$DRY_RUN" == true ]]; then
         log_dry "将生成配置: $output_file"
-        log_dry "环境类型: $env_type"
+        log_dry "环境类型: $env_type (显式指定: ${explicit_env:-false})"
         return 0
     fi
     
+    # 准备环境覆盖变量（如果显式指定）
+    local env_override=""
+    if [[ -n "$explicit_env" ]]; then
+        env_override="export MY_LINUX_CONFIG_ENV=\"$explicit_env\""
+    fi
+
     cat > "$output_file" << EOF
 #!/bin/bash
 #==========================================
 # bashrc-config 自动生成的配置
-# 环境类型: $env_type
 # 生成时间: $(date '+%Y-%m-%d %H:%M:%S')
 #==========================================
 
@@ -141,12 +147,31 @@ generate_bashrc() {
 export BASHRC_CONFIG_DIR="${SCRIPT_DIR}"
 
 # 加载检测库
-source "${SCRIPT_DIR}/lib/detect_env.sh"
+if [[ -f "${SCRIPT_DIR}/lib/detect_env.sh" ]]; then
+    source "${SCRIPT_DIR}/lib/detect_env.sh"
+fi
 
 # 加载网络测试模块
 if [[ -f "${SCRIPT_DIR}/lib/network_test.sh" ]]; then
     source "${SCRIPT_DIR}/lib/network_test.sh"
 fi
+
+#==========================================
+# 动态环境检测
+#==========================================
+# 如果未设置环境变量，则自动检测
+${env_override}
+
+if [[ -n "\$MY_LINUX_CONFIG_ENV" ]]; then
+    CURRENT_ENV="\$MY_LINUX_CONFIG_ENV"
+elif type auto_detect_env >/dev/null 2>&1; then
+    CURRENT_ENV=\$(auto_detect_env)
+else
+    CURRENT_ENV="base"
+fi
+
+# 导出当前环境类型供其他脚本使用
+export MY_LINUX_CURRENT_ENV="\$CURRENT_ENV"
 
 # 加载基础配置
 if [[ -f "${SCRIPT_DIR}/envs/base/config.sh" ]]; then
@@ -154,16 +179,27 @@ if [[ -f "${SCRIPT_DIR}/envs/base/config.sh" ]]; then
 fi
 
 # 加载环境特定配置
-if [[ -f "${SCRIPT_DIR}/envs/${env_type}/config.sh" ]]; then
-    source "${SCRIPT_DIR}/envs/${env_type}/config.sh"
+if [[ -f "${SCRIPT_DIR}/envs/\${CURRENT_ENV}/config.sh" ]]; then
+    source "${SCRIPT_DIR}/envs/\${CURRENT_ENV}/config.sh"
 fi
 
-# 加载组件配置扩展
+#==========================================
+# 组件与扩展加载
+#==========================================
 COMPONENTS_DIR="\${HOME}/.config/my_linux_config/components"
+
 if [ -d "\${COMPONENTS_DIR}" ]; then
+    # 1. 加载全局组件 (*.sh)
     for script in "\${COMPONENTS_DIR}"/*.sh; do
         [ -f "\$script" ] && source "\$script"
     done
+    
+    # 2. 加载环境特定组件 (components/<env>/*.sh)
+    if [ -d "\${COMPONENTS_DIR}/\${CURRENT_ENV}" ]; then
+        for script in "\${COMPONENTS_DIR}/\${CURRENT_ENV}"/*.sh; do
+            [ -f "\$script" ] && source "\$script"
+        done
+    fi
 fi
 
 # 加载用户自定义配置（如果不存在则创建）
@@ -250,8 +286,10 @@ main() {
     backup_existing
     
     # 生成新配置
+    # 如果用户通过命令行指定了 ENV_TYPE，则将其作为显式参数传递
+    local explicit_env="${ENV_TYPE}"
     local bashrc="$HOME/.bashrc"
-    generate_bashrc "$env_type" "$bashrc"
+    generate_bashrc "$env_type" "$bashrc" "$explicit_env"
     
     # 创建用户模板
     create_user_template
