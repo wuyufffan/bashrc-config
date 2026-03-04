@@ -1,167 +1,65 @@
 # bashrc-config
 
-🐚 跨环境 Bash 配置管理工具
+跨环境 Bash 配置管理工具，支持自动环境识别与按环境装配。
 
-## 功能特性
+## 仓库定位
 
-- 🎯 **多环境支持**: 本地(base)、容器(docker)、登录节点(login)、计算节点(compute)
-- 🔍 **自动检测**: 智能识别当前运行环境
-- 📦 **模块化设计**: 按需加载不同功能模块
-- 🎨 **丰富的命令行工具**: 颜色输出、进度显示、交互式选择等
-- 🌐 **网络测试**: 内置网络连通性测试、代理检测、镜像源速度测试
-- 🔄 **热重载**: 配置修改后即时生效
-- 🛡️ **安全备份**: 安装前自动备份现有配置
+- 统一管理 `~/.bashrc` 及环境相关别名、函数、提示符。
+- 支持 `base / docker / login / compute` 四类场景。
+- 提供网络连通性与代理检查命令。
 
-## 快速开始
+## 安装
+
+### 独立安装
 
 ```bash
-# 克隆仓库
 git clone https://github.com/wuyufffan/bashrc-config.git
 cd bashrc-config
-
-# 自动检测环境并安装
-./install.sh
-
-# 指定环境安装
-./install.sh --env docker
-```
-
-## 项目结构
-
-```
-.
-├── envs/               # 环境特定配置
-│   ├── base/           # 基础配置（所有环境共享）
-│   ├── docker/         # 容器环境
-│   ├── login/          # 登录节点
-│   └── compute/        # 计算节点
-├── lib/                # 工具函数库
-│   └── detect_env.sh   # 环境检测
-├── install.sh          # 安装脚本
-└── README.md
-```
-
-## 安装选项
-
-```bash
-./install.sh [选项]
-
-选项:
-    -e, --env ENV       指定环境类型 (base|docker|login|compute)
-    -f, --force         强制覆盖现有配置
-    -n, --no-backup     不备份现有配置
-    -d, --dry-run       试运行模式
-    -h, --help          显示帮助信息
-```
-
-## 环境自动检测规则
-
-| 检测条件 | 环境类型 |
-|---------|---------|
-| `/.dockerenv` 存在 或 cgroup 包含 docker | docker |
-| `$SLURM_JOB_ID` 或 `$PBS_JOBID` 存在 | compute |
-| 主机名包含 compute/node/worker | compute |
-| 主机名包含 login/mgmt/master | login |
-| 以上都不匹配 | base |
-
-## 使用方法
-
-### 在 my_linux_config 中作为子模块使用
-
-```bash
-# 添加子模块
-git submodule add https://github.com/wuyufffan/bashrc-config.git submodules/bashrc-config
-
-# 安装
-cd submodules/bashrc-config
 ./install.sh
 ```
 
-### 自定义配置
-
-用户自定义配置存储在 `~/.bashrc.local`，不会被版本控制覆盖。
+### 通过主仓安装
 
 ```bash
-# 编辑自定义配置
-vim ~/.bashrc.local
-
-# 添加自定义别名
-alias myproject='cd /path/to/project'
-
-# 添加环境变量
-export MY_TOKEN="secret"
-```
-
-## 网络测试功能
-
-bashrc-config 内置网络连通性测试模块，提供以下命令：
-
-```bash
-# 快速测试默认目标（github.com）
-nettest
-
-# 测试指定主机
-nettest www.google.com
-
-# 完整网络测试（DNS、HTTP、多镜像源）
-netfull
-
-# 检测代理设置
-netproxy
-
-# 测试并推荐最快的 PyPI 镜像源
-netpypi
-```
-
-### 网络测试功能包括：
-
-| 命令 | 功能说明 |
-|------|---------|
-| `nettest [host]` | 快速测试指定主机的 DNS、Ping、HTTP |
-| `netfull` | 完整网络测试报告 |
-| `netproxy` | 显示当前代理环境变量 |
-| `netpypi` | 测试各大 PyPI 镜像源速度并推荐最快的 |
-
-### 配置网络测试
-
-```bash
-# 设置测试超时时间（秒）
-export NETWORK_TEST_TIMEOUT=10
-
-# 自定义测试目标
-NETWORK_TEST_HOSTS=("github.com" "gitlab.com" "myserver.com")
-```
-
-## 跨环境配置同步
-
-通过 Git 子模块机制，可以在不同环境间同步配置：
-
-```bash
-# 在工作站上
 cd ~/my_linux_config
-./install.sh --env base
+make install C=bashrc
+```
 
-# 在容器中
-cd ~/my_linux_config
+## 常用命令
+
+```bash
+./install.sh --help
 ./install.sh --env docker
-
-# 在超算登录节点
-./install.sh --env login
-
-# 在计算节点
-./install.sh --env compute
+./install.sh --env login --force
+./install.sh --dry-run
 ```
 
-## 卸载
+参数说明：
 
-```bash
-# 恢复备份
-mv ~/.bashrc.backup.XXXX ~/.bashrc
+- `-e, --env`：指定环境（`base|docker|login|compute`）
+- `-f, --force`：覆盖已有配置
+- `-n, --no-backup`：不创建备份
+- `-d, --dry-run`：只预览，不落盘
 
-# 或删除生成的配置
-rm ~/.bashrc
-```
+## 自动检测规则（简版）
 
-## 许可
+- 容器标记（如 `/.dockerenv`）→ `docker`
+- 调度器环境变量（如 `SLURM_JOB_ID`）→ `compute`
+- 主机名包含 `login/mgmt/master` → `login`
+- 其余默认 `base`
 
-MIT License
+## 内置网络工具
+
+- `nettest [host]`：快速 DNS/Ping/HTTP 检查
+- `netfull`：完整网络测试
+- `netproxy`：查看代理环境变量
+- `netpypi`：测速并推荐 PyPI 镜像
+
+## 自定义与安全
+
+- 用户自定义请写入：`~/.bashrc.local`
+- 安装前默认会备份旧配置，便于回滚
+
+## 许可证
+
+MIT
