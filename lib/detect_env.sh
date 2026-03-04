@@ -20,7 +20,8 @@ detect_container() {
 
 # 检测是否为登录节点
 detect_login_node() {
-    local hostname=$(hostname)
+    local hostname
+    hostname=$(hostname)
     # 常见的登录节点命名模式
     if [[ "$hostname" == *"login"* ]] || \
        [[ "$hostname" == *"mgmt"* ]] || \
@@ -39,7 +40,8 @@ detect_compute_node() {
         return 0
     fi
     
-    local hostname=$(hostname)
+    local hostname
+    hostname=$(hostname)
     if [[ "$hostname" == *"compute"* ]] || \
        [[ "$hostname" == *"node"* ]] || \
        [[ "$hostname" == *"worker"* ]]; then

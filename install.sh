@@ -108,7 +108,8 @@ get_env_type() {
 backup_existing() {
     local bashrc="$HOME/.bashrc"
     if [[ -f "$bashrc" ]] && [[ "$BACKUP" == true ]]; then
-        local backup="${bashrc}.backup.$(date +%Y%m%d_%H%M%S)"
+        local backup
+        backup="${bashrc}.backup.$(date +%Y%m%d_%H%M%S)"
         if [[ "$DRY_RUN" == true ]]; then
             log_dry "将备份 $bashrc 到 $backup"
         else
@@ -267,11 +268,16 @@ EOF
 # 主函数
 main() {
     parse_args "$@"
+
+    if [[ "$FORCE" == true ]]; then
+        log_warn "已启用强制模式 (--force)"
+    fi
     
     log_info "开始安装 bashrc-config..."
     
     # 检测环境
-    local env_type=$(get_env_type)
+    local env_type
+    env_type=$(get_env_type)
     log_info "检测到的环境类型: $env_type"
     
     # 检查环境配置是否存在

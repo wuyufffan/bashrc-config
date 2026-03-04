@@ -43,12 +43,12 @@ test_dns() {
     local timeout=${2:-$NETWORK_TEST_TIMEOUT}
     
     if command -v nslookup &>/dev/null; then
-        timeout $timeout nslookup "$host" &>/dev/null
+        timeout "$timeout" nslookup "$host" &>/dev/null
     elif command -v dig &>/dev/null; then
-        timeout $timeout dig +short "$host" &>/dev/null
+        timeout "$timeout" dig +short "$host" &>/dev/null
     else
         # 退而使用 ping 的解析
-        timeout $timeout ping -c 1 "$host" &>/dev/null
+        timeout "$timeout" ping -c 1 "$host" &>/dev/null
     fi
 }
 
@@ -58,9 +58,9 @@ test_http() {
     local timeout=${2:-$NETWORK_TEST_TIMEOUT}
     
     if command -v curl &>/dev/null; then
-        curl -s --max-time $timeout -o /dev/null -w "%{http_code}" "$url" 2>/dev/null | grep -q "200\|301\|302"
+        curl -s --max-time "$timeout" -o /dev/null -w "%{http_code}" "$url" 2>/dev/null | grep -q "200\|301\|302"
     elif command -v wget &>/dev/null; then
-        timeout $timeout wget -q --spider "$url" 2>/dev/null
+        timeout "$timeout" wget -q --spider "$url" 2>/dev/null
     else
         return 1
     fi
@@ -71,7 +71,7 @@ test_ping() {
     local host=$1
     local timeout=${2:-$NETWORK_TEST_TIMEOUT}
     
-    timeout $timeout ping -c 1 -W 2 "$host" &>/dev/null
+    timeout "$timeout" ping -c 1 -W 2 "$host" &>/dev/null
 }
 
 # 检测代理设置
@@ -126,7 +126,7 @@ network_quick_test() {
         ((failed++))
     fi
     
-    return $failed
+    return "$failed"
 }
 
 # 完整网络测试
@@ -188,7 +188,7 @@ network_full_test() {
     fi
     echo -e "${BLUE}=================================${RESET}\n"
     
-    return $failed
+    return "$failed"
 }
 
 # 测试指定镜像源速度
