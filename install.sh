@@ -254,6 +254,11 @@ setup_te_path_component() {
         return 0
     fi
 
+    if [[ -f "$te_env_script" ]]; then
+        log_info "TE_PATH 组件已存在，跳过创建: $te_env_script"
+        return 0
+    fi
+
     mkdir -p "$components_dir"
     cat > "$te_env_script" << 'EOF'
 # 自动检测并导出 Transformer Engine 路径

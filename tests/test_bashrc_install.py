@@ -37,7 +37,6 @@ def test_dry_run_does_not_modify_home(tmp_path):
     result = _run(["--dry-run"], env=env)
     assert result.returncode == 0
     assert "DRY-RUN" in result.stdout or "试运行" in result.stdout
-    # HOME 目录下不应产生任何文件
     written = list(tmp_path.iterdir())
     assert written == [], f"dry-run 不应写文件，但写了: {written}"
 
@@ -63,6 +62,18 @@ def test_install_creates_bashrc_local_template(tmp_path):
     env = {**os.environ, "HOME": str(tmp_path)}
     _run(["--force", "--env", "base"], env=env)
     assert (tmp_path / ".bashrc.local").exists(), ".bashrc.local 模板应被生成"
+
+
+def test_force_install_creates_te_env_component(tmp_path):
+    """安装后应生成 TE_PATH 组件脚本"""
+    env = {**os.environ, "HOME": str(tmp_path)}
+    result = _run(["--force", "--env", "base"], env=env)
+    assert result.returncode == 0
+    te_env = tmp_path / ".config" / "my_linux_config" / "components" / "te_env.sh"
+    assert te_env.exists(), "te_env.sh 应被生成"
+    assert os.access(te_env, os.X_OK), "te_env.sh 应为可执行"
+    content = te_env.read_text()
+    assert 'export TE_PATH=' in content
 
 
 def test_dry_run_flag_short(tmp_path):
