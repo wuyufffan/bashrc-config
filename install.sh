@@ -174,6 +174,14 @@ fi
 # 导出当前环境类型供其他脚本使用
 export MY_LINUX_CURRENT_ENV="\$CURRENT_ENV"
 
+#==========================================
+# PATH 设置
+#==========================================
+# 确保 \$HOME/.local/bin 在 PATH 中（te-cli / bashrc 命令安装位置）
+if [[ ":\$PATH:" != *":\$HOME/.local/bin:"* ]]; then
+    export PATH="\$HOME/.local/bin:\$PATH"
+fi
+
 # 加载基础配置
 if [[ -f "${SCRIPT_DIR}/envs/base/config.sh" ]]; then
     source "${SCRIPT_DIR}/envs/base/config.sh"

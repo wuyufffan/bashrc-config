@@ -83,3 +83,14 @@ def test_dry_run_flag_short(tmp_path):
     assert result.returncode == 0
     written = list(tmp_path.iterdir())
     assert written == []
+
+
+def test_install_bashrc_contains_local_bin_path_setup(tmp_path):
+    """安装后生成的 .bashrc 应确保 ~/.local/bin 在 PATH 中"""
+    env = {**os.environ, "HOME": str(tmp_path)}
+    result = _run(["--force", "--env", "base"], env=env)
+    assert result.returncode == 0
+
+    content = (tmp_path / ".bashrc").read_text()
+    assert "if [[ \":$PATH:\" != *\":$HOME/.local/bin:\"* ]]; then" in content
+    assert "export PATH=\"$HOME/.local/bin:$PATH\"" in content
