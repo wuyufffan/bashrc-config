@@ -111,3 +111,44 @@ detect_dtk() {
         echo "none"
     fi
 }
+
+# 检测 TransformerEngine 版本标签（如 te27 / te210）
+detect_te_prompt_tag() {
+    local te_path="${TE_PATH:-/workspace/TransformerEngine}"
+    local version_file="${te_path}/build_tools/VERSION.txt"
+    local version
+    local major
+    local minor
+
+    if [[ ! -f "$version_file" ]]; then
+        return 1
+    fi
+
+    version=$(head -n 1 "$version_file" 2>/dev/null | tr -d '[:space:]')
+    if [[ ! "$version" =~ ^([0-9]+)\.([0-9]+)(\.[0-9]+)?$ ]]; then
+        return 1
+    fi
+
+    major="${BASH_REMATCH[1]}"
+    minor="${BASH_REMATCH[2]}"
+    echo "te${major}${minor}"
+}
+
+# 生成 Docker 环境提示标签（如 [te27-ubuntu]）
+docker_prompt_label() {
+    local te_tag
+    local os_id
+
+    if [[ "$(detect_container)" != "docker" ]]; then
+        return 1
+    fi
+
+    te_tag=$(detect_te_prompt_tag) || return 1
+    os_id=$(detect_os)
+
+    if [[ "$os_id" != "ubuntu" ]]; then
+        return 1
+    fi
+
+    echo "[${te_tag}-ubuntu]"
+}

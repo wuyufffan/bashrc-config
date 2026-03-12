@@ -6,6 +6,7 @@ import subprocess
 from pathlib import Path
 
 DETECT_ENV = Path(__file__).resolve().parents[1] / "lib" / "detect_env.sh"
+DOCKER_CONFIG = Path(__file__).resolve().parents[1] / "envs" / "docker" / "config.sh"
 
 
 def _run(func: str, env: dict = None) -> str:
@@ -85,3 +86,94 @@ detect_login_node
 """
     result = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True)
     assert result.stdout.strip() == "login"
+
+
+def test_detect_te_prompt_tag_from_te_version_file(tmp_path):
+    """VERSION.txt 中的 2.7.0 应映射为 te27"""
+    te_path = tmp_path / "TransformerEngine"
+    version_dir = te_path / "build_tools"
+    version_dir.mkdir(parents=True)
+    (version_dir / "VERSION.txt").write_text("2.7.0\n", encoding="utf-8")
+
+    result = _run("detect_te_prompt_tag", env={"TE_PATH": str(te_path)})
+
+    assert result == "te27"
+
+
+def test_docker_prompt_label_returns_te_tag_for_ubuntu_container(tmp_path):
+    """Docker + Ubuntu + TE 版本时应生成 [teXX-ubuntu] 标签"""
+    te_path = tmp_path / "TransformerEngine"
+    version_dir = te_path / "build_tools"
+    version_dir.mkdir(parents=True)
+    (version_dir / "VERSION.txt").write_text("2.10.0\n", encoding="utf-8")
+
+    cmd = f"""
+source {DETECT_ENV}
+detect_container() {{
+    echo "docker"
+}}
+detect_os() {{
+    echo "ubuntu"
+}}
+docker_prompt_label
+"""
+    result = subprocess.run(
+        ["bash", "-c", cmd],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "TE_PATH": str(te_path)},
+    )
+
+    assert result.stdout.strip() == "[te210-ubuntu]"
+
+
+def test_docker_prompt_label_is_empty_without_te_version(tmp_path):
+    """缺少 TE 版本时不应回退为 [docker]"""
+    te_path = tmp_path / "missing-te"
+    cmd = f"""
+source {DETECT_ENV}
+detect_container() {{
+    echo "docker"
+}}
+detect_os() {{
+    echo "ubuntu"
+}}
+docker_prompt_label || true
+"""
+    result = subprocess.run(
+        ["bash", "-c", cmd],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "TE_PATH": str(te_path)},
+    )
+
+    assert result.stdout.strip() == ""
+
+
+def test_docker_config_ps1_uses_dynamic_te_label(tmp_path):
+    """Docker 配置应使用动态 [teXX-ubuntu] 标签而不是硬编码 [docker]"""
+    te_path = tmp_path / "TransformerEngine"
+    version_dir = te_path / "build_tools"
+    version_dir.mkdir(parents=True)
+    (version_dir / "VERSION.txt").write_text("2.7.0\n", encoding="utf-8")
+
+    cmd = f"""
+source {DETECT_ENV}
+detect_container() {{
+    echo "docker"
+}}
+detect_os() {{
+    echo "ubuntu"
+}}
+source {DOCKER_CONFIG}
+printf '%s\n' "$PS1"
+"""
+    result = subprocess.run(
+        ["bash", "-c", cmd],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "TE_PATH": str(te_path)},
+    )
+
+    assert "[te27-ubuntu]" in result.stdout
+    assert "[docker]" not in result.stdout
