@@ -54,6 +54,7 @@ make install C=bashrc
 - `netfull`：完整网络测试
 - `netproxy`：查看代理环境变量
 - `netpypi`：测速并推荐 PyPI 镜像
+- `proxy on|off|set|status|help`：管理本地代理环境变量
 
 ## 自定义与安全
 

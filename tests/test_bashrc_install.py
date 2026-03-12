@@ -57,6 +57,14 @@ def test_install_base_env_bashrc_sources_base_config(tmp_path):
     assert "base/config.sh" in content
 
 
+def test_install_bashrc_sources_proxy_lib(tmp_path):
+    """.bashrc 应 source lib/proxy.sh"""
+    env = {**os.environ, "HOME": str(tmp_path)}
+    _run(["--force", "--env", "base"], env=env)
+    content = (tmp_path / ".bashrc").read_text()
+    assert "lib/proxy.sh" in content
+
+
 def test_install_creates_bashrc_local_template(tmp_path):
     """安装后应生成 .bashrc.local 模板"""
     env = {**os.environ, "HOME": str(tmp_path)}

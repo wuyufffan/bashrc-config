@@ -157,6 +157,11 @@ if [[ -f "${SCRIPT_DIR}/lib/network_test.sh" ]]; then
     source "${SCRIPT_DIR}/lib/network_test.sh"
 fi
 
+# 加载代理模块
+if [[ -f "${SCRIPT_DIR}/lib/proxy.sh" ]]; then
+    source "${SCRIPT_DIR}/lib/proxy.sh"
+fi
+
 #==========================================
 # 动态环境检测
 #==========================================
