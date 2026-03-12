@@ -56,6 +56,12 @@ make install C=bashrc
 - `netpypi`：测速并推荐 PyPI 镜像
 - `proxy on|off|set|status|help`：管理本地代理环境变量
 
+## Bashrc 维护
+
+- 通用 alias 集中维护在 `lib/bash_alias.sh`
+- 环境专属 alias 仍位于 `envs/docker|login|compute/config.sh`
+- 安装后可用 `bashrc help` 查看 bashrc 相关命令
+
 ## 自定义与安全
 
 - 用户自定义请写入：`~/.bashrc.local`

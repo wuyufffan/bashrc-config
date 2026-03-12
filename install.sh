@@ -162,6 +162,11 @@ if [[ -f "${SCRIPT_DIR}/lib/proxy.sh" ]]; then
     source "${SCRIPT_DIR}/lib/proxy.sh"
 fi
 
+# 加载通用 alias
+if [[ -f "${SCRIPT_DIR}/lib/bash_alias.sh" ]]; then
+    source "${SCRIPT_DIR}/lib/bash_alias.sh"
+fi
+
 #==========================================
 # 动态环境检测
 #==========================================
