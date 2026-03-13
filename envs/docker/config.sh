@@ -19,6 +19,13 @@ else
 	export PS1='\[\033[1;33m\]\u@\h\[\033[0m\]:\[\033[1;34m\]\w\[\033[0m\] \$ '
 fi
 
+export MY_LINUX_RIGHT_TIME_FORMAT='%H:%M:%S'
+export MY_LINUX_RIGHT_TIME=1
+
+if type enable_right_time_prompt >/dev/null 2>&1; then
+	enable_right_time_prompt
+fi
+
 # 容器常用别名
 alias dps='docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"'
 alias dimg='docker images'

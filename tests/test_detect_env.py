@@ -7,6 +7,7 @@ from pathlib import Path
 
 DETECT_ENV = Path(__file__).resolve().parents[1] / "lib" / "detect_env.sh"
 DOCKER_CONFIG = Path(__file__).resolve().parents[1] / "envs" / "docker" / "config.sh"
+PROMPT_LIB = Path(__file__).resolve().parents[1] / "lib" / "prompt.sh"
 
 
 def _run(func: str, env: dict = None) -> str:
@@ -177,3 +178,50 @@ printf '%s\n' "$PS1"
 
     assert "[te27-ubuntu]" in result.stdout
     assert "[docker]" not in result.stdout
+
+
+def test_docker_config_enables_right_time_prompt(tmp_path):
+    te_path = tmp_path / "TransformerEngine"
+    version_dir = te_path / "build_tools"
+    version_dir.mkdir(parents=True)
+    (version_dir / "VERSION.txt").write_text("2.7.0\n", encoding="utf-8")
+
+    cmd = f"""
+source {DETECT_ENV}
+source {PROMPT_LIB}
+detect_container() {{
+    echo "docker"
+}}
+detect_os() {{
+    echo "ubuntu"
+}}
+source {DOCKER_CONFIG}
+printf '%s\n' "$PROMPT_COMMAND"
+printf '%s\n' "$MY_LINUX_RIGHT_TIME_FORMAT"
+printf '%s\n' "$MY_LINUX_RIGHT_TIME"
+"""
+    result = subprocess.run(
+        ["bash", "-ic", cmd],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "TE_PATH": str(te_path)},
+    )
+
+    assert "__my_linux_right_time_prompt" in result.stdout
+    assert "%H:%M:%S" in result.stdout
+    assert "1" in result.stdout
+
+
+def test_right_time_prompt_disabled_outside_docker():
+    cmd = f"""
+source {PROMPT_LIB}
+export MY_LINUX_CURRENT_ENV=base
+export MY_LINUX_RIGHT_TIME=1
+if __my_linux_should_show_right_time; then
+    echo enabled
+else
+    echo disabled
+fi
+"""
+    result = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True)
+    assert result.stdout.strip() == "disabled"

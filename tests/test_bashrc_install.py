@@ -73,6 +73,14 @@ def test_install_bashrc_sources_alias_lib(tmp_path):
     assert "lib/bash_alias.sh" in content
 
 
+def test_install_bashrc_sources_completions_lib(tmp_path):
+    """.bashrc 应 source lib/completions.sh"""
+    env = {**os.environ, "HOME": str(tmp_path)}
+    _run(["--force", "--env", "base"], env=env)
+    content = (tmp_path / ".bashrc").read_text()
+    assert "lib/completions.sh" in content
+
+
 def test_install_creates_bashrc_local_template(tmp_path):
     """安装后应生成 .bashrc.local 模板"""
     env = {**os.environ, "HOME": str(tmp_path)}

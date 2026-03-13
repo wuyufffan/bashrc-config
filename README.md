@@ -56,11 +56,18 @@ make install C=bashrc
 - `netpypi`：测速并推荐 PyPI 镜像
 - `proxy on|off|set|status|help`：管理本地代理环境变量
 
+安装 `bashrc-config` 后，`make install C=bashrc` 会同时安装独立命令 `~/.local/bin/proxy`。
+
+- 已 `source ~/.bashrc` 的交互式 shell：`proxy` 作为 shell function 使用，可直接影响当前 shell 环境
+- 独立 `proxy` 命令：提供同一套 `help/status/on/off/set` 入口，适合未 reload shell 时直接调用
+
 ## Bashrc 维护
 
 - 通用 alias 集中维护在 `lib/bash_alias.sh`
 - 环境专属 alias 仍位于 `envs/docker|login|compute/config.sh`
 - 安装后可用 `bashrc help` 查看 bashrc 相关命令
+- Docker 环境默认显示右侧时间，格式为 `HH:MM:SS`
+- 可在 `~/.bashrc.local` 中通过 `export MY_LINUX_RIGHT_TIME=0` 关闭右侧时间
 
 ## 自定义与安全
 

@@ -162,6 +162,16 @@ if [[ -f "${SCRIPT_DIR}/lib/proxy.sh" ]]; then
     source "${SCRIPT_DIR}/lib/proxy.sh"
 fi
 
+# 加载 prompt 模块
+if [[ -f "${SCRIPT_DIR}/lib/prompt.sh" ]]; then
+    source "${SCRIPT_DIR}/lib/prompt.sh"
+fi
+
+# 加载命令补全模块
+if [[ -f "${SCRIPT_DIR}/lib/completions.sh" ]]; then
+    source "${SCRIPT_DIR}/lib/completions.sh"
+fi
+
 # 加载通用 alias
 if [[ -f "${SCRIPT_DIR}/lib/bash_alias.sh" ]]; then
     source "${SCRIPT_DIR}/lib/bash_alias.sh"
