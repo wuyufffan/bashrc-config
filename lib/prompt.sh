@@ -31,6 +31,28 @@ __my_linux_right_time_prompt() {
     printf '\0337\033[%dG\033[%dD\033[0;37m%s\033[0m\0338' "$cols" "$((time_len - 1))" "$time_text"
 }
 
+__my_linux_right_time_backspace() {
+    local point=${READLINE_POINT:-0}
+    local line=${READLINE_LINE:-}
+
+    if (( point > 0 )); then
+        READLINE_LINE=${line:0:point-1}${line:point}
+        READLINE_POINT=$((point - 1))
+    fi
+
+    __my_linux_right_time_prompt
+}
+
+enable_right_time_readline_bindings() {
+    local binding_del='"\C-?": "__my_linux_right_time_backspace"'
+    local binding_bs='"\C-h": "__my_linux_right_time_backspace"'
+    local existing
+
+    existing=$(bind -X 2>/dev/null || true)
+    [[ "$existing" == *'"\C-?": "__my_linux_right_time_backspace"'* ]] || bind -x '"\C-?": "__my_linux_right_time_backspace"'
+    [[ "$existing" == *'"\C-h": "__my_linux_right_time_backspace"'* ]] || bind -x '"\C-h": "__my_linux_right_time_backspace"'
+}
+
 enable_right_time_prompt() {
     local hook="__my_linux_right_time_prompt"
 
@@ -43,4 +65,6 @@ enable_right_time_prompt() {
     else
         PROMPT_COMMAND="${hook}"
     fi
+
+    enable_right_time_readline_bindings
 }

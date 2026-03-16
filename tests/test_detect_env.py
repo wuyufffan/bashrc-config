@@ -199,6 +199,7 @@ source {DOCKER_CONFIG}
 printf '%s\n' "$PROMPT_COMMAND"
 printf '%s\n' "$MY_LINUX_RIGHT_TIME_FORMAT"
 printf '%s\n' "$MY_LINUX_RIGHT_TIME"
+bind -X
 """
     result = subprocess.run(
         ["bash", "-ic", cmd],
@@ -210,6 +211,8 @@ printf '%s\n' "$MY_LINUX_RIGHT_TIME"
     assert "__my_linux_right_time_prompt" in result.stdout
     assert "%H:%M:%S" in result.stdout
     assert "1" in result.stdout
+    assert '"\\C-?": "__my_linux_right_time_backspace"' in result.stdout
+    assert '"\\C-h": "__my_linux_right_time_backspace"' in result.stdout
 
 
 def test_right_time_prompt_disabled_outside_docker():
