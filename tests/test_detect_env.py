@@ -200,6 +200,7 @@ printf '%s\n' "$PROMPT_COMMAND"
 printf '%s\n' "$MY_LINUX_RIGHT_TIME_FORMAT"
 printf '%s\n' "$MY_LINUX_RIGHT_TIME"
 bind -X
+bind -p | grep -F '"\\C-?"'
 """
     result = subprocess.run(
         ["bash", "-ic", cmd],
@@ -211,8 +212,8 @@ bind -X
     assert "__my_linux_right_time_prompt" in result.stdout
     assert "%H:%M:%S" in result.stdout
     assert "1" in result.stdout
-    assert '"\\C-?": "__my_linux_right_time_backspace"' in result.stdout
     assert '"\\C-h": "__my_linux_right_time_backspace"' in result.stdout
+    assert '"\\C-x\\C-r": "__my_linux_right_time_backspace"' in result.stdout
 
 
 def test_right_time_prompt_disabled_outside_docker():
@@ -228,3 +229,18 @@ fi
 """
     result = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True)
     assert result.stdout.strip() == "disabled"
+
+
+def test_docker_config_maps_del_to_redraw_hook():
+    cmd = f"""
+source {PROMPT_LIB}
+export MLC_FORCE_INTERACTIVE_PROMPT=1
+export MY_LINUX_CURRENT_ENV=docker
+export MY_LINUX_RIGHT_TIME=1
+enable_right_time_prompt
+bind -X
+"""
+    result = subprocess.run(["bash", "-ic", cmd], capture_output=True, text=True)
+
+    assert result.returncode == 0
+    assert '"\\C-x\\C-r": "__my_linux_right_time_backspace"' in result.stdout

@@ -137,10 +137,15 @@ __my_linux_right_time_backspace() {
 
 enable_right_time_readline_bindings() {
     local existing
+    local bindings
 
     existing=$(bind -X 2>/dev/null || true)
-    [[ "$existing" == *'"\C-?": "__my_linux_right_time_backspace"'* ]] || bind -x '"\C-?": "__my_linux_right_time_backspace"'
     [[ "$existing" == *'"\C-h": "__my_linux_right_time_backspace"'* ]] || bind -x '"\C-h": "__my_linux_right_time_backspace"'
+    [[ "$existing" == *'"\C-x\C-r": "__my_linux_right_time_backspace"'* ]] || bind -x '"\C-x\C-r": "__my_linux_right_time_backspace"'
+
+    bind -r '"\C-?"' 2>/dev/null || true
+    bindings=$(bind -p 2>/dev/null || true)
+    [[ "$bindings" == *'"\C-?": "\C-x\C-r"'* ]] || bind '"\C-?": "\C-x\C-r"'
 }
 
 enable_right_time_prompt() {
