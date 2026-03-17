@@ -98,12 +98,26 @@ __my_linux_should_show_right_time() {
     return 0
 }
 
-__my_linux_right_time_prompt() {
+__my_linux_compute_right_time_text() {
+    printf '%s' "${MLC_PROMPT_CLOCK_TEXT:-$(date +"${MY_LINUX_RIGHT_TIME_FORMAT:-%H:%M:%S}")}"
+}
+
+__my_linux_update_right_time_cache() {
+    MY_LINUX_CACHED_RIGHT_TIME="$(__my_linux_compute_right_time_text)"
+    export MY_LINUX_CACHED_RIGHT_TIME
+}
+
+__my_linux_render_right_time() {
     local exit_code=$?
     __my_linux_should_show_right_time || return $exit_code
 
     local time_text cols start_col
-    time_text=${MLC_PROMPT_CLOCK_TEXT:-$(date +"${MY_LINUX_RIGHT_TIME_FORMAT:-%H:%M:%S}")}
+    time_text="${MY_LINUX_CACHED_RIGHT_TIME:-}"
+    if [[ -z "$time_text" ]]; then
+        __my_linux_update_right_time_cache
+        time_text="$MY_LINUX_CACHED_RIGHT_TIME"
+    fi
+
     cols=${MLC_PROMPT_CLOCK_COLUMNS:-${COLUMNS:-$(tput cols 2>/dev/null || echo 80)}}
 
     if [[ ! "$cols" =~ ^[0-9]+$ ]]; then
@@ -116,6 +130,13 @@ __my_linux_right_time_prompt() {
     fi
 
     printf '\033[s\033[%dG%s\033[u' "$start_col" "$time_text"
+    return $exit_code
+}
+
+__my_linux_right_time_prompt() {
+    local exit_code=$?
+    __my_linux_update_right_time_cache
+    __my_linux_render_right_time
     return $exit_code
 }
 
@@ -132,7 +153,7 @@ __my_linux_right_time_backspace() {
         READLINE_POINT=$((point - 1))
     fi
 
-    __my_linux_right_time_prompt
+    __my_linux_render_right_time
 }
 
 __my_linux_right_time_delete_char() {
@@ -143,7 +164,7 @@ __my_linux_right_time_delete_char() {
         READLINE_LINE=${line:0:point}${line:point+1}
     fi
 
-    __my_linux_right_time_prompt
+    __my_linux_render_right_time
 }
 
 enable_right_time_readline_bindings() {

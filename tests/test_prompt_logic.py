@@ -173,6 +173,8 @@ def test_backspace_handler_redraws_right_time_after_line_edit():
             'export MY_LINUX_RIGHT_TIME=1 && '
             'export MLC_PROMPT_CLOCK_TEXT=12:34:56 && '
             'export MLC_PROMPT_CLOCK_COLUMNS=20 && '
+            '__my_linux_update_right_time_cache && '
+            'export MLC_PROMPT_CLOCK_TEXT=23:45:01 && '
             'READLINE_LINE=abcd && '
             'READLINE_POINT=4 && '
             '__my_linux_right_time_backspace && '
@@ -182,6 +184,47 @@ def test_backspace_handler_redraws_right_time_after_line_edit():
 
     assert result.returncode == 0
     assert result.stdout == "\x1b[s\x1b[13G12:34:56\x1b[u\nline=abc\npoint=3"
+
+
+def test_delete_handler_redraws_cached_time_after_line_edit():
+    result = _run(
+        (
+            f'source "{PROMPT_LIB}" && '
+            'export MLC_FORCE_INTERACTIVE_PROMPT=1 && '
+            'export MY_LINUX_CURRENT_ENV=docker && '
+            'export MY_LINUX_RIGHT_TIME=1 && '
+            'export MLC_PROMPT_CLOCK_TEXT=12:34:56 && '
+            'export MLC_PROMPT_CLOCK_COLUMNS=20 && '
+            '__my_linux_update_right_time_cache && '
+            'export MLC_PROMPT_CLOCK_TEXT=23:45:01 && '
+            'READLINE_LINE=abcd && '
+            'READLINE_POINT=2 && '
+            '__my_linux_right_time_delete_char && '
+            'printf "\nline=%s\npoint=%s" "$READLINE_LINE" "$READLINE_POINT"'
+        )
+    )
+
+    assert result.returncode == 0
+    assert result.stdout == "\x1b[s\x1b[13G12:34:56\x1b[u\nline=abd\npoint=2"
+
+
+def test_prompt_command_refreshes_cached_time_on_new_prompt():
+    result = _run(
+        (
+            f'source "{PROMPT_LIB}" && '
+            'export MLC_FORCE_INTERACTIVE_PROMPT=1 && '
+            'export MY_LINUX_CURRENT_ENV=docker && '
+            'export MY_LINUX_RIGHT_TIME=1 && '
+            'export MLC_PROMPT_CLOCK_COLUMNS=20 && '
+            'export MLC_PROMPT_CLOCK_TEXT=12:34:56 && '
+            '__my_linux_right_time_prompt >/dev/null && '
+            'export MLC_PROMPT_CLOCK_TEXT=23:45:01 && '
+            '__my_linux_right_time_prompt'
+        )
+    )
+
+    assert result.returncode == 0
+    assert result.stdout == "\x1b[s\x1b[13G23:45:01\x1b[u"
 
 
 def test_del_key_redraws_time_in_interactive_shell():
