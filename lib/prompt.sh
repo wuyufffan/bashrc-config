@@ -135,6 +135,17 @@ __my_linux_right_time_backspace() {
     __my_linux_right_time_prompt
 }
 
+__my_linux_right_time_delete_char() {
+    local point=${READLINE_POINT:-0}
+    local line=${READLINE_LINE:-}
+
+    if (( point < ${#line} )); then
+        READLINE_LINE=${line:0:point}${line:point+1}
+    fi
+
+    __my_linux_right_time_prompt
+}
+
 enable_right_time_readline_bindings() {
     local existing
     local bindings
@@ -142,10 +153,13 @@ enable_right_time_readline_bindings() {
     existing=$(bind -X 2>/dev/null || true)
     [[ "$existing" == *'"\C-h": "__my_linux_right_time_backspace"'* ]] || bind -x '"\C-h": "__my_linux_right_time_backspace"'
     [[ "$existing" == *'"\C-x\C-r": "__my_linux_right_time_backspace"'* ]] || bind -x '"\C-x\C-r": "__my_linux_right_time_backspace"'
+    [[ "$existing" == *'"\C-x\C-d": "__my_linux_right_time_delete_char"'* ]] || bind -x '"\C-x\C-d": "__my_linux_right_time_delete_char"'
 
     bind -r '"\C-?"' 2>/dev/null || true
+    bind -r '"\e[3~"' 2>/dev/null || true
     bindings=$(bind -p 2>/dev/null || true)
     [[ "$bindings" == *'"\C-?": "\C-x\C-r"'* ]] || bind '"\C-?": "\C-x\C-r"'
+    [[ "$bindings" == *'"\e[3~": "\C-x\C-d"'* ]] || bind '"\e[3~": "\C-x\C-d"'
 }
 
 enable_right_time_prompt() {

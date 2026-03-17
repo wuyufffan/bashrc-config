@@ -214,3 +214,51 @@ def test_del_key_redraws_time_after_cursor_move():
 
     assert "\x1b[s\x1b[13G12:34:56\x1b[u" in output
     assert output.endswith("abd\x08")
+
+
+def test_del_key_redraws_time_after_multiple_cursor_moves():
+    output = _run_interactive(
+        (
+            f'source "{PROMPT_LIB}"\n'
+            'export MLC_FORCE_INTERACTIVE_PROMPT=1 MY_LINUX_CURRENT_ENV=docker MY_LINUX_RIGHT_TIME=1 '
+            'MLC_PROMPT_CLOCK_TEXT=12:34:56 COLUMNS=20\n'
+            'enable_right_time_prompt\n'
+            'abcdef'
+        ),
+        b'\x1b[D\x1b[D\x1b[D\x7f',
+    )
+
+    assert output.count("\x1b[s\x1b[13G12:34:56\x1b[u") >= 1
+    assert "abdef" in output
+
+
+def test_del_key_redraws_time_across_multiple_backspaces():
+    output = _run_interactive(
+        (
+            f'source "{PROMPT_LIB}"\n'
+            'export MLC_FORCE_INTERACTIVE_PROMPT=1 MY_LINUX_CURRENT_ENV=docker MY_LINUX_RIGHT_TIME=1 '
+            'MLC_PROMPT_CLOCK_TEXT=12:34:56 COLUMNS=20\n'
+            'enable_right_time_prompt\n'
+            'abcd'
+        ),
+        b'\x7f\x7f',
+    )
+
+    assert output.count("\x1b[s\x1b[13G12:34:56\x1b[u") >= 1
+    assert output.endswith("ab")
+
+
+def test_delete_key_redraws_time_after_cursor_move():
+    output = _run_interactive(
+        (
+            f'source "{PROMPT_LIB}"\n'
+            'export MLC_FORCE_INTERACTIVE_PROMPT=1 MY_LINUX_CURRENT_ENV=docker MY_LINUX_RIGHT_TIME=1 '
+            'MLC_PROMPT_CLOCK_TEXT=12:34:56 COLUMNS=20\n'
+            'enable_right_time_prompt\n'
+            'abcd'
+        ),
+        b'\x1b[D\x1b[D\x1b[3~',
+    )
+
+    assert output.count("\x1b[s\x1b[13G12:34:56\x1b[u") >= 1
+    assert "abd" in output
