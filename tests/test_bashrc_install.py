@@ -118,3 +118,12 @@ def test_install_bashrc_contains_local_bin_path_setup(tmp_path):
     content = (tmp_path / ".bashrc").read_text()
     assert "if [[ \":$PATH:\" != *\":$HOME/.local/bin:\"* ]]; then" in content
     assert "export PATH=\"$HOME/.local/bin:$PATH\"" in content
+
+
+def test_install_docker_env_bashrc_sources_prompt_helper(tmp_path):
+    env = {**os.environ, "HOME": str(tmp_path)}
+    result = _run(["--force", "--env", "docker"], env=env)
+    assert result.returncode == 0
+
+    content = (tmp_path / ".bashrc").read_text()
+    assert "lib/prompt.sh" in content

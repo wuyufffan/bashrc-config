@@ -12,6 +12,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # 加载检测库
 source "${SCRIPT_DIR}/lib/detect_env.sh"
 
+# 加载提示符辅助库
+if [[ -f "${SCRIPT_DIR}/lib/prompt.sh" ]]; then
+    source "${SCRIPT_DIR}/lib/prompt.sh"
+fi
+
 # 默认配置
 ENV_TYPE=""
 FORCE=false
@@ -157,14 +162,14 @@ if [[ -f "${SCRIPT_DIR}/lib/network_test.sh" ]]; then
     source "${SCRIPT_DIR}/lib/network_test.sh"
 fi
 
+# 加载提示符辅助模块
+if [[ -f "${SCRIPT_DIR}/lib/prompt.sh" ]]; then
+    source "${SCRIPT_DIR}/lib/prompt.sh"
+fi
+
 # 加载代理模块
 if [[ -f "${SCRIPT_DIR}/lib/proxy.sh" ]]; then
     source "${SCRIPT_DIR}/lib/proxy.sh"
-fi
-
-# 加载 prompt 模块
-if [[ -f "${SCRIPT_DIR}/lib/prompt.sh" ]]; then
-    source "${SCRIPT_DIR}/lib/prompt.sh"
 fi
 
 # 加载命令补全模块
@@ -176,7 +181,6 @@ fi
 if [[ -f "${SCRIPT_DIR}/lib/bash_alias.sh" ]]; then
     source "${SCRIPT_DIR}/lib/bash_alias.sh"
 fi
-
 #==========================================
 # 动态环境检测
 #==========================================
