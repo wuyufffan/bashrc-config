@@ -48,6 +48,21 @@ def test_detect_compute_node_when_slurm_job():
     assert "compute" in result
 
 
+def test_detect_compute_node_with_matching_hostname():
+    """主机名含 compute/node/worker 时应检测为 compute 节点"""
+    cmd = f"""
+source {DETECT_ENV}
+hostname() {{
+    echo worker-a01
+}}
+detect_compute_node
+"""
+    result = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True)
+
+    assert result.returncode == 0
+    assert result.stdout.strip() == "compute"
+
+
 def test_auto_detect_env_returns_base_by_default():
     """无特殊环境变量时应返回 base（或 docker，取决于是否在容器中）"""
     result = _run("auto_detect_env")
@@ -60,16 +75,16 @@ def test_detect_os_returns_nonempty():
     assert result != ""
 
 
-def test_detect_gpu_returns_valid_value():
-    """detect_gpu 应返回 nvidia / amd / none"""
-    result = _run("detect_gpu")
-    assert result in ("nvidia", "amd", "none")
+def test_legacy_gpu_and_dtk_helpers_are_not_exported():
+    """已移除的 detect_gpu / detect_dtk 不应继续对外暴露"""
+    cmd = f"""
+source {DETECT_ENV}
+printf '%s|%s\n' "$(type -t detect_gpu 2>/dev/null || true)" "$(type -t detect_dtk 2>/dev/null || true)"
+"""
+    result = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True)
 
-
-def test_detect_dtk_returns_valid_value():
-    """detect_dtk 应返回有效版本字符串或 none"""
-    result = _run("detect_dtk")
-    assert result in ("26.04", "25.04.2", "none")
+    assert result.returncode == 0
+    assert result.stdout.strip() == "|"
 
 
 def test_detect_login_node_with_matching_hostname():
@@ -77,17 +92,28 @@ def test_detect_login_node_with_matching_hostname():
     cmd = f"""
 source {DETECT_ENV}
 # override hostname for test
-detect_login_node() {{
-    local hostname="hpc-login-01"
-    if [[ "$hostname" == *"login"* ]]; then
-        echo "login"; return 0
-    fi
-    return 1
+hostname() {{
+    echo hpc-login-01
 }}
 detect_login_node
 """
     result = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True)
     assert result.stdout.strip() == "login"
+
+
+def test_detect_login_node_returns_nonzero_without_matching_hostname():
+    """普通主机名不应被识别为 login 节点"""
+    cmd = f"""
+source {DETECT_ENV}
+hostname() {{
+    echo workstation-01
+}}
+detect_login_node >/dev/null 2>&1 || echo not-login
+"""
+    result = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True)
+
+    assert result.returncode == 0
+    assert result.stdout.strip() == "not-login"
 
 
 def test_detect_te_prompt_tag_from_te_version_file(tmp_path):

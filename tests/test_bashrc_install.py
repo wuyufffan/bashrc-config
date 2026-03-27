@@ -57,6 +57,27 @@ def test_install_base_env_bashrc_sources_base_config(tmp_path):
     assert "base/config.sh" in content
 
 
+def test_install_base_env_does_not_export_legacy_logging_helpers(tmp_path):
+    """安装后的 shell 不应继续导出 now/info 等旧 helper"""
+    env = {**os.environ, "HOME": str(tmp_path)}
+    result = _run(["--force", "--env", "base"], env=env)
+    assert result.returncode == 0
+
+    shell = subprocess.run(
+        [
+            "bash",
+            "-lc",
+            f"source {tmp_path}/.bashrc >/dev/null 2>&1 && printf '%s|%s|%s|%s|%s|%s\n' \"$(type -t now 2>/dev/null || true)\" \"$(type -t timestamp 2>/dev/null || true)\" \"$(type -t info 2>/dev/null || true)\" \"$(type -t ok 2>/dev/null || true)\" \"$(type -t warn 2>/dev/null || true)\" \"$(type -t err 2>/dev/null || true)\"",
+        ],
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+
+    assert shell.returncode == 0
+    assert shell.stdout.strip() == "|||||"
+
+
 def test_install_bashrc_does_not_source_proxy_lib(tmp_path):
     """.bashrc 不应 source lib/proxy.sh"""
     env = {**os.environ, "HOME": str(tmp_path)}

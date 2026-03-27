@@ -88,30 +88,6 @@ detect_os() {
     fi
 }
 
-# 检测显卡类型
-detect_gpu() {
-    if command -v nvidia-smi &> /dev/null; then
-        echo "nvidia"
-        return 0
-    fi
-    if command -v rocm-smi &> /dev/null; then
-        echo "amd"
-        return 0
-    fi
-    echo "none"
-}
-
-# 检测 DTK 版本
-detect_dtk() {
-    if [[ -f /opt/dtk-26.04/env.sh ]]; then
-        echo "26.04"
-    elif [[ -f /opt/dtk-25.04.2/env.sh ]]; then
-        echo "25.04.2"
-    else
-        echo "none"
-    fi
-}
-
 # 检测 TransformerEngine 版本标签（如 te27 / te210）
 detect_te_prompt_tag() {
     local te_path="${TE_PATH:-/workspace/TransformerEngine}"

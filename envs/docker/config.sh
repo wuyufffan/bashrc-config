@@ -9,8 +9,8 @@
 
 # 容器内提示符 - 识别到 TE 版本时显示 [teXX-ubuntu]，否则仅显示常规前缀
 DOCKER_PROMPT_LABEL=""
-if type build_docker_prompt_label >/dev/null 2>&1; then
-	DOCKER_PROMPT_LABEL=$(build_docker_prompt_label 2>/dev/null || true)
+if type resolve_docker_prompt_label >/dev/null 2>&1; then
+	DOCKER_PROMPT_LABEL=$(resolve_docker_prompt_label 2>/dev/null || true)
 elif type docker_prompt_label >/dev/null 2>&1; then
 	DOCKER_PROMPT_LABEL=$(docker_prompt_label 2>/dev/null || true)
 fi

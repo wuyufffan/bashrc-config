@@ -17,33 +17,6 @@ export PURPLE='\033[1;35m'
 export CYAN='\033[1;36m'
 
 #==========================================
-# 通用函数
-#==========================================
-now() {
-    echo -e "${GREY}[$(date +'%H:%M:%S')]${RESET}"
-}
-
-timestamp() {
-    echo -e "${GREY}[$(date +'%Y-%m-%d %H:%M:%S')]${RESET}"
-}
-
-info() {
-    echo -e "$(now) ${BLUE}INFO${RESET} $*"
-}
-
-ok() {
-    echo -e "$(now) ${GREEN}OK${RESET} $*"
-}
-
-warn() {
-    echo -e "$(now) ${YELLOW}WARN${RESET} $*"
-}
-
-err() {
-    echo -e "$(now) ${RED}ERROR${RESET} $*"
-}
-
-#==========================================
 # 历史记录设置
 #==========================================
 export HISTSIZE=5000

@@ -71,45 +71,28 @@ def _run_interactive(script: str, keystrokes: bytes, env: dict | None = None) ->
     return output.decode("utf-8", errors="replace")
 
 
-def test_detect_te_prompt_name_from_version_file(tmp_path):
+def test_resolve_docker_prompt_label_lazy_loads_detect_env(tmp_path):
     te_root = tmp_path / "TransformerEngine"
     version_dir = te_root / "build_tools"
     version_dir.mkdir(parents=True)
     (version_dir / "VERSION.txt").write_text("2.7.0\n")
 
     result = _run(
-        f'source "{PROMPT_LIB}" && TE_PATH="{te_root}" detect_te_prompt_name'
-    )
-
-    assert result.returncode == 0
-    assert result.stdout.strip() == "te27"
-
-
-def test_detect_container_prompt_name_prefers_os_release_id():
-    result = _run(f'source "{PROMPT_LIB}" && detect_container_prompt_name')
-
-    assert result.returncode == 0
-    assert result.stdout.strip() == "ubuntu"
-
-
-def test_build_docker_prompt_label_combines_te_and_container_name(tmp_path):
-    te_root = tmp_path / "TransformerEngine"
-    version_dir = te_root / "build_tools"
-    version_dir.mkdir(parents=True)
-    (version_dir / "VERSION.txt").write_text("2.7.0\n")
-
-    result = _run(
-        f'source "{PROMPT_LIB}" && TE_PATH="{te_root}" build_docker_prompt_label'
+        (
+            f'source "{PROMPT_LIB}" && '
+            'unset -f docker_prompt_label detect_te_prompt_tag detect_os 2>/dev/null || true && '
+            f'TE_PATH="{te_root}" resolve_docker_prompt_label'
+        )
     )
 
     assert result.returncode == 0
     assert result.stdout.strip() == "[te27-ubuntu]"
 
 
-def test_docker_config_enables_te_prompt_and_clock():
+def test_docker_config_uses_resolved_label_and_clock():
     content = DOCKER_CONFIG.read_text()
 
-    assert "build_docker_prompt_label" in content
+    assert "resolve_docker_prompt_label" in content
     assert "enable_docker_right_prompt_clock" in content
 
 
@@ -121,6 +104,63 @@ def test_enable_docker_right_prompt_clock_sets_prompt_command():
 
     assert result.returncode == 0
     assert result.stdout.strip() == "__my_linux_right_time_prompt"
+
+
+def test_enable_docker_right_prompt_clock_respects_disable_flag():
+    result = _run(
+        f'source "{PROMPT_LIB}" && unset PROMPT_COMMAND && export MLC_DISABLE_RIGHT_PROMPT_CLOCK=1 && enable_docker_right_prompt_clock && printf "%s" "${{PROMPT_COMMAND:-}}"',
+        env={"TERM": "xterm-256color", "MLC_FORCE_INTERACTIVE_PROMPT": "1"},
+    )
+
+    assert result.returncode == 0
+    assert result.stdout.strip() == ""
+
+
+def test_update_shell_prompt_falls_back_when_label_is_unavailable():
+    result = _run(
+        (
+            f'source "{PROMPT_LIB}" && '
+            'export MY_LINUX_CURRENT_ENV=docker && '
+            'resolve_docker_prompt_label() { return 1; } && '
+            'enable_docker_right_prompt_clock() { return 0; } && '
+            'update_shell_prompt && '
+            'printf "%s" "$PS1"'
+        )
+    )
+
+    assert result.returncode == 0
+    assert "\\u@\\h" in result.stdout
+    assert "[te" not in result.stdout
+
+
+def test_update_shell_prompt_sets_login_prompt_style():
+    result = _run(
+        f'source "{PROMPT_LIB}" && export MY_LINUX_CURRENT_ENV=login && update_shell_prompt && printf "%s" "$PS1"'
+    )
+
+    assert result.returncode == 0
+    assert "\\033[1;32m" in result.stdout
+    assert "\\u@\\h" in result.stdout
+
+
+def test_update_shell_prompt_sets_compute_prompt_style():
+    result = _run(
+        f'source "{PROMPT_LIB}" && export MY_LINUX_CURRENT_ENV=compute && update_shell_prompt && printf "%s" "$PS1"'
+    )
+
+    assert result.returncode == 0
+    assert "\\033[1;33m" in result.stdout
+    assert "\\u@\\h" in result.stdout
+
+
+def test_update_shell_prompt_sets_base_prompt_style():
+    result = _run(
+        f'source "{PROMPT_LIB}" && export MY_LINUX_CURRENT_ENV=base && update_shell_prompt && printf "%s" "$PS1"'
+    )
+
+    assert result.returncode == 0
+    assert "\\033[1;33m" in result.stdout
+    assert "\\u@\\h" in result.stdout
 
 
 def test_enable_right_time_prompt_rewrites_legacy_prompt_command_hook():

@@ -4,81 +4,19 @@
 # 提供 Docker 提示标签与右侧时间提示（Bash 模拟版）
 #
 
-detect_te_prompt_name() {
-    if type detect_te_prompt_tag >/dev/null 2>&1; then
-        detect_te_prompt_tag && return 0
-    fi
+_MLC_PROMPT_LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-    local te_root="${TE_PATH:-/workspace/TransformerEngine}"
-    local version_file=""
-    local version_text=""
+resolve_docker_prompt_label() {
+    local detect_env_lib="${_MLC_PROMPT_LIB_DIR}/detect_env.sh"
 
-    if [[ -f "${te_root}/build_tools/VERSION.txt" ]]; then
-        version_file="${te_root}/build_tools/VERSION.txt"
-    elif [[ -f "${te_root}/VERSION.txt" ]]; then
-        version_file="${te_root}/VERSION.txt"
-    fi
-
-    if [[ -n "$version_file" ]]; then
-        version_text="$(head -n 1 "$version_file" 2>/dev/null | tr -d '[:space:]')"
-    fi
-
-    if [[ "$version_text" =~ ^([0-9]+)\.([0-9]+) ]]; then
-        echo "te${BASH_REMATCH[1]}${BASH_REMATCH[2]}"
-        return 0
-    fi
-
-    return 1
-}
-
-detect_container_prompt_name() {
-    if [[ -n "${CONTAINER_NAME:-}" ]]; then
-        echo "$CONTAINER_NAME"
-        return 0
-    fi
-
-    if type detect_os >/dev/null 2>&1; then
-        local detected_os=""
-        detected_os="$(detect_os 2>/dev/null || true)"
-        if [[ -n "$detected_os" ]]; then
-            echo "$detected_os"
-            return 0
+    if ! type docker_prompt_label >/dev/null 2>&1; then
+        if [[ ! -f "$detect_env_lib" ]]; then
+            return 1
         fi
+        source "$detect_env_lib"
     fi
 
-    if [[ -f /etc/os-release ]]; then
-        local distro_id=""
-        distro_id="$(. /etc/os-release && printf '%s' "${ID:-}")"
-        if [[ -n "$distro_id" ]]; then
-            echo "$distro_id"
-            return 0
-        fi
-    fi
-
-    hostname | sed 's/\..*$//'
-}
-
-build_docker_prompt_label() {
-    if type docker_prompt_label >/dev/null 2>&1; then
-        local existing_label=""
-        existing_label="$(docker_prompt_label 2>/dev/null || true)"
-        if [[ -n "$existing_label" ]]; then
-            echo "$existing_label"
-            return 0
-        fi
-    fi
-
-    local te_name=""
-    local container_name=""
-
-    te_name="$(detect_te_prompt_name 2>/dev/null || true)"
-    container_name="$(detect_container_prompt_name 2>/dev/null || true)"
-
-    if [[ -z "$te_name" || -z "$container_name" ]]; then
-        return 1
-    fi
-
-    echo "[${te_name}-${container_name}]"
+    docker_prompt_label 2>/dev/null || return 1
 }
 
 __my_linux_should_show_right_time() {
@@ -246,8 +184,8 @@ update_shell_prompt() {
         docker)
             local docker_prompt_label_text=""
 
-            if type build_docker_prompt_label >/dev/null 2>&1; then
-                docker_prompt_label_text="$(build_docker_prompt_label 2>/dev/null || true)"
+            if type resolve_docker_prompt_label >/dev/null 2>&1; then
+                docker_prompt_label_text="$(resolve_docker_prompt_label 2>/dev/null || true)"
             elif type docker_prompt_label >/dev/null 2>&1; then
                 docker_prompt_label_text="$(docker_prompt_label 2>/dev/null || true)"
             fi
