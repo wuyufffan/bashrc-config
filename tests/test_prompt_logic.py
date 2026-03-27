@@ -123,6 +123,38 @@ def test_enable_docker_right_prompt_clock_sets_prompt_command():
     assert result.stdout.strip() == "__my_linux_right_time_prompt"
 
 
+def test_enable_right_time_prompt_rewrites_legacy_prompt_command_hook():
+    result = _run(
+        (
+            f'source "{PROMPT_LIB}" && '
+            'export MLC_FORCE_INTERACTIVE_PROMPT=1 MY_LINUX_CURRENT_ENV=docker MY_LINUX_RIGHT_TIME=1 && '
+            "export PROMPT_COMMAND='render_right_prompt_time;printf ready' && "
+            'enable_right_time_prompt && '
+            'printf "%s" "$PROMPT_COMMAND"'
+        )
+    )
+
+    assert result.returncode == 0
+    assert result.stdout.strip() == "__my_linux_right_time_prompt;printf ready"
+
+
+def test_legacy_render_right_prompt_time_function_still_works():
+    result = _run(
+        (
+            f'source "{PROMPT_LIB}" && '
+            'export MLC_FORCE_INTERACTIVE_PROMPT=1 && '
+            'export MY_LINUX_CURRENT_ENV=docker && '
+            'export MY_LINUX_RIGHT_TIME=1 && '
+            'export MLC_PROMPT_CLOCK_TEXT=12:34:56 && '
+            'export MLC_PROMPT_CLOCK_COLUMNS=20 && '
+            'render_right_prompt_time'
+        )
+    )
+
+    assert result.returncode == 0
+    assert result.stdout == "\x1b[s\x1b[13G12:34:56\x1b[u"
+
+
 def test_prompt_clock_renders_right_aligned_without_newline_and_preserves_status():
     result = _run(
         (

@@ -140,8 +140,28 @@ __my_linux_right_time_prompt() {
     return $exit_code
 }
 
+render_right_prompt_time() {
+    __my_linux_right_time_prompt "$@"
+}
+
 _mlc_prompt_command_with_clock() {
     __my_linux_right_time_prompt
+}
+
+normalize_right_time_prompt_command() {
+    local hook="__my_linux_right_time_prompt"
+
+    [[ -n "${PROMPT_COMMAND:-}" ]] || return 0
+
+    PROMPT_COMMAND="${PROMPT_COMMAND//render_right_prompt_time/${hook}}"
+    PROMPT_COMMAND="${PROMPT_COMMAND//_mlc_prompt_command_with_clock/${hook}}"
+
+    while [[ "$PROMPT_COMMAND" == *';;'* ]]; do
+        PROMPT_COMMAND="${PROMPT_COMMAND//;;/;}"
+    done
+
+    PROMPT_COMMAND="${PROMPT_COMMAND#;}"
+    PROMPT_COMMAND="${PROMPT_COMMAND%;}"
 }
 
 __my_linux_right_time_backspace() {
@@ -186,7 +206,10 @@ enable_right_time_readline_bindings() {
 enable_right_time_prompt() {
     local hook="__my_linux_right_time_prompt"
 
+    normalize_right_time_prompt_command
+
     if [[ ";${PROMPT_COMMAND:-};" == *";${hook};"* ]]; then
+        enable_right_time_readline_bindings
         return 0
     fi
 

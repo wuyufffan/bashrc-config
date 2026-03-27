@@ -19,14 +19,12 @@ def test_completions_register_complete_functions():
         f"""
 source {COMPLETIONS_LIB}
 complete -p bashrc
-complete -p proxy
 complete -p te
 """
     )
 
     assert result.returncode == 0
     assert "complete -F _bashrc_completion bashrc" in result.stdout
-    assert "complete -F _proxy_completion proxy" in result.stdout
     assert "complete -F _te_completion te" in result.stdout
 
 
@@ -42,22 +40,20 @@ printf '%s\n' "${{COMPREPLY[@]}}"
     )
 
     assert result.returncode == 0
-    assert result.stdout.splitlines() == ["1", "2", "3", "4", "5", "6", "7", "8"]
+    assert result.stdout.splitlines() == ["1", "2", "3", "4", "5", "6", "7"]
 
 
-def test_proxy_completion_lists_commands():
+def test_proxy_completion_is_not_registered():
     result = _run_bash(
         f"""
 source {COMPLETIONS_LIB}
-COMP_WORDS=(proxy '')
-COMP_CWORD=1
-_proxy_completion
-printf '%s\n' "${{COMPREPLY[@]}}"
+complete -p proxy >/dev/null 2>&1
+printf '%s\n' "$?"
 """
     )
 
     assert result.returncode == 0
-    assert result.stdout.splitlines() == ["on", "off", "set", "status", "help"]
+    assert result.stdout.splitlines() == ["1"]
 
 
 def test_te_log_completion_lists_timestamps(tmp_path):

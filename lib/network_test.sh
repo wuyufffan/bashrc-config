@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # 网络连通性测试模块
-# 测试代理、DNS、镜像源等网络连接
+# 测试 DNS、HTTP、镜像源等网络连接
 #
 
 #==========================================
@@ -74,24 +74,6 @@ test_ping() {
     timeout "$timeout" ping -c 1 -W 2 "$host" &>/dev/null
 }
 
-# 检测代理设置
-detect_proxy() {
-    local proxy_vars=("http_proxy" "https_proxy" "HTTP_PROXY" "HTTPS_PROXY" "all_proxy" "ALL_PROXY")
-    local found=false
-    
-    echo -e "${BLUE}代理设置检测:${RESET}"
-    for var in "${proxy_vars[@]}"; do
-        if [[ -n "${!var}" ]]; then
-            echo -e "  ${GREEN}✓${RESET} $var = ${!var}"
-            found=true
-        fi
-    done
-    
-    if [[ "$found" == false ]]; then
-        echo -e "  ${YELLOW}⚠${RESET} 未设置代理"
-    fi
-}
-
 #==========================================
 # 综合测试
 #==========================================
@@ -136,10 +118,6 @@ network_full_test() {
     echo -e "\n${BLUE}=================================${RESET}"
     echo -e "${BLUE}     网络连通性测试报告          ${RESET}"
     echo -e "${BLUE}=================================${RESET}\n"
-    
-    # 代理检测
-    detect_proxy
-    echo ""
     
     # 主机连通性测试
     echo -e "${BLUE}主机连通性测试:${RESET}"
@@ -270,9 +248,14 @@ recommend_pypi_mirror() {
 # 命令别名
 alias nettest='network_quick_test'
 alias netfull='network_full_test'
-alias netproxy='detect_proxy'
 alias netpypi='recommend_pypi_mirror'
 
+unalias netproxy 2>/dev/null || true
 unalias proxy 2>/dev/null || true
 unalias unproxy 2>/dev/null || true
 unalias set_proxy 2>/dev/null || true
+unset -f netproxy 2>/dev/null || true
+unset -f proxy 2>/dev/null || true
+unset -f unproxy 2>/dev/null || true
+unset -f set_proxy 2>/dev/null || true
+unset -f detect_proxy 2>/dev/null || true

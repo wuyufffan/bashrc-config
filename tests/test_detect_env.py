@@ -8,6 +8,7 @@ from pathlib import Path
 DETECT_ENV = Path(__file__).resolve().parents[1] / "lib" / "detect_env.sh"
 DOCKER_CONFIG = Path(__file__).resolve().parents[1] / "envs" / "docker" / "config.sh"
 PROMPT_LIB = Path(__file__).resolve().parents[1] / "lib" / "prompt.sh"
+NETWORK_TEST_LIB = Path(__file__).resolve().parents[1] / "lib" / "network_test.sh"
 
 
 def _run(func: str, env: dict = None) -> str:
@@ -316,3 +317,15 @@ bind -X
 
     assert result.returncode == 0
     assert '"\\C-x\\C-r": "__my_linux_right_time_backspace"' in result.stdout
+
+
+def test_network_helpers_do_not_define_legacy_proxy_commands():
+    cmd = f"""
+source {NETWORK_TEST_LIB}
+printf '%s|%s\n' "$(type -t proxy 2>/dev/null || true)" "$(type -t netproxy 2>/dev/null || true)"
+"""
+    result = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True)
+
+    assert result.returncode == 0
+    assert result.stdout.strip() == "|"
+

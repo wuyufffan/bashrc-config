@@ -174,24 +174,7 @@ _bashrc_completion() {
     fi
 
     if [[ "$prev" == "edit" ]]; then
-        COMPREPLY=( $(compgen -W '1 2 3 4 5 6 7 8' -- "$cur") )
-        return 0
-    fi
-}
-
-_proxy_completion() {
-    local cur prev
-    COMPREPLY=()
-    cur="${COMP_WORDS[COMP_CWORD]}"
-    prev="${COMP_WORDS[COMP_CWORD-1]:-}"
-
-    if (( COMP_CWORD == 1 )); then
-        COMPREPLY=( $(compgen -W 'on off set status help' -- "$cur") )
-        return 0
-    fi
-
-    if [[ "$prev" == "set" ]]; then
-        COMPREPLY=()
+        COMPREPLY=( $(compgen -W '1 2 3 4 5 6 7' -- "$cur") )
         return 0
     fi
 }
@@ -285,5 +268,4 @@ _te_completion() {
 }
 
 complete -F _bashrc_completion bashrc
-complete -F _proxy_completion proxy
 complete -F _te_completion te

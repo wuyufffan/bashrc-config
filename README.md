@@ -52,14 +52,7 @@ make install C=bashrc
 
 - `nettest [host]`：快速 DNS/Ping/HTTP 检查
 - `netfull`：完整网络测试
-- `netproxy`：查看代理环境变量
 - `netpypi`：测速并推荐 PyPI 镜像
-- `proxy on|off|set|status|help`：管理本地代理环境变量
-
-安装 `bashrc-config` 后，`make install C=bashrc` 会同时安装独立命令 `~/.local/bin/proxy`。
-
-- 已 `source ~/.bashrc` 的交互式 shell：`proxy` 作为 shell function 使用，可直接影响当前 shell 环境
-- 独立 `proxy` 命令：提供同一套 `help/status/on/off/set` 入口，适合未 reload shell 时直接调用
 
 ## Bashrc 维护
 
