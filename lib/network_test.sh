@@ -272,3 +272,7 @@ alias nettest='network_quick_test'
 alias netfull='network_full_test'
 alias netproxy='detect_proxy'
 alias netpypi='recommend_pypi_mirror'
+
+unalias proxy 2>/dev/null || true
+unalias unproxy 2>/dev/null || true
+unalias set_proxy 2>/dev/null || true

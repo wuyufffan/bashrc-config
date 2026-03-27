@@ -57,12 +57,12 @@ def test_install_base_env_bashrc_sources_base_config(tmp_path):
     assert "base/config.sh" in content
 
 
-def test_install_bashrc_sources_proxy_lib(tmp_path):
-    """.bashrc 应 source lib/proxy.sh"""
+def test_install_bashrc_does_not_source_proxy_lib(tmp_path):
+    """.bashrc 不应 source lib/proxy.sh"""
     env = {**os.environ, "HOME": str(tmp_path)}
     _run(["--force", "--env", "base"], env=env)
     content = (tmp_path / ".bashrc").read_text()
-    assert "lib/proxy.sh" in content
+    assert "lib/proxy.sh" not in content
 
 
 def test_install_bashrc_sources_alias_lib(tmp_path):
@@ -118,9 +118,19 @@ def test_install_bashrc_contains_local_bin_path_setup(tmp_path):
     content = (tmp_path / ".bashrc").read_text()
     assert "if [[ \":$PATH:\" != *\":$HOME/.local/bin:\"* ]]; then" in content
     assert "export PATH=\"$HOME/.local/bin:$PATH\"" in content
+def test_install_bashrc_refreshes_prompt_after_components(tmp_path):
+    """生成的 .bashrc 应在加载组件后再次刷新 prompt"""
+    env = {**os.environ, "HOME": str(tmp_path)}
+    result = _run(["--force", "--env", "docker"], env=env)
+    assert result.returncode == 0
+
+    content = (tmp_path / ".bashrc").read_text()
+    assert 'if type update_shell_prompt >/dev/null 2>&1; then' in content
+    assert '    update_shell_prompt' in content
 
 
 def test_install_docker_env_bashrc_sources_prompt_helper(tmp_path):
+    """docker 环境生成的 .bashrc 应 source lib/prompt.sh"""
     env = {**os.environ, "HOME": str(tmp_path)}
     result = _run(["--force", "--env", "docker"], env=env)
     assert result.returncode == 0

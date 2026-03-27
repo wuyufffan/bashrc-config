@@ -119,6 +119,29 @@ detect_te_prompt_tag() {
     local version
     local major
     local minor
+    local branch_name=""
+    local upstream_name=""
+    local candidate=""
+
+    if git -C "$te_path" rev-parse --git-dir >/dev/null 2>&1; then
+        branch_name=$(git -C "$te_path" branch --show-current 2>/dev/null || true)
+        upstream_name=$(git -C "$te_path" rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)
+
+        for candidate in "$upstream_name" "$branch_name"; do
+            if [[ "$candidate" =~ release_v([0-9]+)\.([0-9]+) ]]; then
+                echo "te${BASH_REMATCH[1]}${BASH_REMATCH[2]}"
+                return 0
+            fi
+            if [[ "$candidate" =~ te([0-9]+) ]]; then
+                echo "te${BASH_REMATCH[1]}"
+                return 0
+            fi
+        done
+    fi
+
+    if [[ ! -f "$version_file" && -f "${te_path}/VERSION.txt" ]]; then
+        version_file="${te_path}/VERSION.txt"
+    fi
 
     if [[ ! -f "$version_file" ]]; then
         return 1
@@ -146,9 +169,15 @@ docker_prompt_label() {
     te_tag=$(detect_te_prompt_tag) || return 1
     os_id=$(detect_os)
 
-    if [[ "$os_id" != "ubuntu" ]]; then
+    case "$os_id" in
+        rocky-linux|rocky_linux)
+            os_id="rocky"
+            ;;
+    esac
+
+    if [[ -z "$os_id" ]]; then
         return 1
     fi
 
-    echo "[${te_tag}-ubuntu]"
+    echo "[${te_tag}-${os_id}]"
 }

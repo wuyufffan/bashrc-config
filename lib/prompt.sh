@@ -217,3 +217,34 @@ enable_docker_right_prompt_clock() {
 
     enable_right_time_prompt
 }
+
+update_shell_prompt() {
+    case "${MY_LINUX_CURRENT_ENV:-base}" in
+        docker)
+            local docker_prompt_label_text=""
+
+            if type build_docker_prompt_label >/dev/null 2>&1; then
+                docker_prompt_label_text="$(build_docker_prompt_label 2>/dev/null || true)"
+            elif type docker_prompt_label >/dev/null 2>&1; then
+                docker_prompt_label_text="$(docker_prompt_label 2>/dev/null || true)"
+            fi
+
+            if [[ -n "$docker_prompt_label_text" ]]; then
+                export PS1="\[\033[1;32m\]${docker_prompt_label_text}\[\033[0m\] \[\033[1;33m\]\u@\h\[\033[0m\]:\[\033[1;34m\]\w\[\033[0m\] \$ "
+            else
+                export PS1='\[\033[1;33m\]\u@\h\[\033[0m\]:\[\033[1;34m\]\w\[\033[0m\] \$ '
+            fi
+
+            enable_docker_right_prompt_clock
+            ;;
+        login)
+            export PS1='\[\033[1;32m\]\u@\h\[\033[0m\]:\[\033[1;34m\]\w\[\033[0m\] \$ '
+            ;;
+        compute)
+            export PS1='\[\033[1;33m\]\u@\h\[\033[0m\]:\[\033[1;34m\]\w\[\033[0m\] \$ '
+            ;;
+        *)
+            export PS1='\[\033[1;33m\]\u@\h\[\033[0m\]:\[\033[1;34m\]\w\[\033[0m\] \$ '
+            ;;
+    esac
+}

@@ -19,8 +19,6 @@ export CYAN='\033[1;36m'
 #==========================================
 # 通用函数
 #==========================================
-
-# 时间戳函数
 now() {
     echo -e "${GREY}[$(date +'%H:%M:%S')]${RESET}"
 }
@@ -29,7 +27,6 @@ timestamp() {
     echo -e "${GREY}[$(date +'%Y-%m-%d %H:%M:%S')]${RESET}"
 }
 
-# 信息输出
 info() {
     echo -e "$(now) ${BLUE}INFO${RESET} $*"
 }
@@ -46,15 +43,16 @@ err() {
     echo -e "$(now) ${RED}ERROR${RESET} $*"
 }
 
+#==========================================
 # 历史记录设置
+#==========================================
 export HISTSIZE=5000
 export HISTFILESIZE=10000
 export HISTCONTROL=ignoredups:erasedups
 shopt -s histappend 2>/dev/null || true
 
-# 历史记录前缀搜索（方向键 ↑/↓）
-bind '"\e[A": history-search-backward'
-bind '"\e[B": history-search-forward'
+bind '"\e[A": history-search-backward' 2>/dev/null || true
+bind '"\e[B": history-search-forward' 2>/dev/null || true
 
 #==========================================
 # 基础提示符定义

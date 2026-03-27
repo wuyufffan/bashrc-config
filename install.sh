@@ -167,11 +167,6 @@ if [[ -f "${SCRIPT_DIR}/lib/prompt.sh" ]]; then
     source "${SCRIPT_DIR}/lib/prompt.sh"
 fi
 
-# 加载代理模块
-if [[ -f "${SCRIPT_DIR}/lib/proxy.sh" ]]; then
-    source "${SCRIPT_DIR}/lib/proxy.sh"
-fi
-
 # 加载命令补全模块
 if [[ -f "${SCRIPT_DIR}/lib/completions.sh" ]]; then
     source "${SCRIPT_DIR}/lib/completions.sh"
@@ -239,6 +234,10 @@ fi
 USER_CONFIG="\${HOME}/.bashrc.local"
 if [[ -f "\$USER_CONFIG" ]]; then
     source "\$USER_CONFIG"
+fi
+
+if type update_shell_prompt >/dev/null 2>&1; then
+    update_shell_prompt
 fi
 
 EOF

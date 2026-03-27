@@ -101,6 +101,51 @@ def test_detect_te_prompt_tag_from_te_version_file(tmp_path):
     assert result == "te27"
 
 
+def test_detect_te_prompt_tag_from_git_branch(tmp_path):
+    """Git 分支名中的 te27 应优先映射为提示标签"""
+    te_repo = tmp_path / "TransformerEngine"
+    te_repo.mkdir()
+    subprocess.run(["git", "init"], cwd=te_repo, check=True, capture_output=True)
+    subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=te_repo, check=True)
+    subprocess.run(["git", "config", "user.name", "tester"], cwd=te_repo, check=True)
+    (te_repo / "README.md").write_text("demo\n")
+    subprocess.run(["git", "add", "README.md"], cwd=te_repo, check=True)
+    subprocess.run(["git", "commit", "-m", "init"], cwd=te_repo, check=True, capture_output=True)
+    subprocess.run(["git", "checkout", "-b", "bugfix/feature_te27"], cwd=te_repo, check=True, capture_output=True)
+
+    result = _run("detect_te_prompt_tag", env={"TE_PATH": str(te_repo)})
+    assert result == "te27"
+
+
+def test_detect_te_prompt_tag_accepts_git_file_layout(tmp_path):
+    """当 .git 是文件而非目录时，仍应能识别 te 版本"""
+    repo_dir = tmp_path / "TransformerEngine"
+    repo_dir.mkdir()
+    (repo_dir / ".git").write_text("gitdir: /tmp/fake-git-dir\n")
+
+    cmd = f"""
+source {DETECT_ENV}
+git() {{
+    if [[ "$1 $2 $3" == "-C {repo_dir} rev-parse" ]]; then
+        return 0
+    fi
+    if [[ "$1 $2 $3 $4" == "-C {repo_dir} branch --show-current" ]]; then
+        echo bugfix/example_te27
+        return 0
+    fi
+    if [[ "$1 $2 $3 $4 $5" == "-C {repo_dir} rev-parse --abbrev-ref --symbolic-full-name" ]]; then
+        echo origin/bugfix/example_te27
+        return 0
+    fi
+    command git "$@"
+}}
+export TE_PATH="{repo_dir}"
+detect_te_prompt_tag
+"""
+    result = subprocess.run(["bash", "-c", cmd], capture_output=True, text=True, check=True)
+    assert result.stdout.strip() == "te27"
+
+
 def test_docker_prompt_label_returns_te_tag_for_ubuntu_container(tmp_path):
     """Docker + Ubuntu + TE 版本时应生成 [teXX-ubuntu] 标签"""
     te_path = tmp_path / "TransformerEngine"
@@ -126,6 +171,33 @@ docker_prompt_label
     )
 
     assert result.stdout.strip() == "[te210-ubuntu]"
+
+
+def test_docker_prompt_label_returns_te_tag_for_rocky_container(tmp_path):
+    """Docker + Rocky + TE 版本时应生成 [teXX-rocky] 标签"""
+    te_path = tmp_path / "TransformerEngine"
+    version_dir = te_path / "build_tools"
+    version_dir.mkdir(parents=True)
+    (version_dir / "VERSION.txt").write_text("2.7.0\n", encoding="utf-8")
+
+    cmd = f"""
+source {DETECT_ENV}
+detect_container() {{
+    echo "docker"
+}}
+detect_os() {{
+    echo "rocky-linux"
+}}
+docker_prompt_label
+"""
+    result = subprocess.run(
+        ["bash", "-c", cmd],
+        capture_output=True,
+        text=True,
+        env={**os.environ, "TE_PATH": str(te_path)},
+    )
+
+    assert result.stdout.strip() == "[te27-rocky]"
 
 
 def test_docker_prompt_label_is_empty_without_te_version(tmp_path):
